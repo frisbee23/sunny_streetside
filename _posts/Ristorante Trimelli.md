@@ -1,6 +1,5 @@
 ---
 layout: default
-title: Home
 ---
 web: http://www.trimelli.at/
 address: Landstraßer Hauptstraße 31, 1030 Wien
