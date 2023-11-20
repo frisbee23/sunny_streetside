@@ -7,4 +7,4 @@ const testing = (tp) => {
     return "lame"
   };
 
-  module.exports = testing;
+module.exports = testing;
