@@ -6,8 +6,9 @@ title: Blog
 
 {% for place in site.places %}
   <h2> <a href="{{ place.url }}">{{ place.name }} </a></h2>
-    looking-direction: {{ place.outlook-dir }} <br>
+    outlook: {{ place.outlook }} <br>
     website: <a href="{{ place.web }}">{{ place.web }}</a> <br>
-    address/maps: <a href="{{ place.maps }}">{{ place. address }}</a> <br>
+    address/maps: <a href="{{ place.maps }}">{{ place.address }}</a> <br>
+    sun position: <a href="{{ place.sun }}">sonnenverlauf.de</a> <br>
   <p> {{ place.content | markdownify }}</p>
 {% endfor %}

@@ -1,9 +1,8 @@
 ---
-layout: post
-web: https://aera.at/
+web: 'https://aera.at/'
 address: Gonzagagasse 11, 1010 Wien
-compass-heading: NW, NO
-maps-link: https://maps.app.goo.gl/qXZHWFofVoUejWS89
+outlook: NW, NO
+maps-link: 'https://maps.app.goo.gl/qXZHWFofVoUejWS89'
 sun-link: 
 related-place: aera
 ---
