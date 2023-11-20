@@ -2,13 +2,12 @@
 layout: default
 title: Blog
 ---
-<h1>Latest Posts</h1>
+<h1>All Places</h1>
 
-<ul>
-  {% for post in site.posts %}
-    <li>
-      <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
-      {{ post.excerpt }}
-    </li>
-  {% endfor %}
-</ul>
+{% for place in site.places %}
+  <h2> <a href="{{ place.url }}">{{ place.name }} </a></h2>
+    looking-direction: {{ place.outlook-dir }} <br>
+    website: <a href="{{ place.web }}">{{ place.web }}</a> <br>
+    address/maps: <a href="{{ place.maps }}">{{ place. address }}</a> <br>
+  <p> {{ place.content | markdownify }}</p>
+{% endfor %}
