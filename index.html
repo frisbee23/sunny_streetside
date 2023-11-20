@@ -9,13 +9,33 @@ title: Blog
 !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
 </script>
 
+<h1>current sun data</h1>
+<p id="sunAngle"></p>
+<p id="sunPosition"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/suncalc"></script>
+  <script>
+    // https://www.npmjs.com/package/suncalc
+
+    const now = new Date();
+
+    const latitude = 48.210033; // Example: San Francisco, CA
+    const longitude = 16.363449;
+
+    const sunPosition = SunCalc.getPosition(now, latitude, longitude);
+    const sunAltitude = sunPosition.altitude * (180 / Math.PI);
+
+    document.getElementById('sunAngle').textContent = `Sun's altitude: ${sunAltitude.toFixed(2)} degrees`;
+    document.getElementById('sunPosition').textContent = `position(azimuth): ${sunPosition.azimuth.toFixed(2)} degrees`;
+  </script>
 <h1>All Places</h1>
 
 {% for place in site.places %}
   <h2> <a href="{{ place.url }}">{{ place.name }} </a></h2>
     outlook: {{ place.outlook }} <br>
+    outlook: {{ place.outlook }} <br>
     website: <a href="{{ place.web }}">{{ place.web }}</a> <br>
-    address/maps: <a href="{{ place.maps }}">{{ place.address }}</a> <br>
-    sun position: <a href="{{ place.sun }}">sonnenverlauf.de</a> <br>
+    maps: <a href="{{ place.maps }}">{{ place.address }}</a> <br>
+    sun: <a href="{{ place.sun }}">sonnenverlauf.de</a> <br>
   <p> {{ place.content | markdownify }}</p>
 {% endfor %}
