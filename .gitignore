@@ -10,3 +10,6 @@ _site
 .jekyll-cache
 .jekyll-metadata
 vendor
+
+RUN
+_notes/*
