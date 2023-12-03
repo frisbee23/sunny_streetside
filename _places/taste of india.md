@@ -14,7 +14,7 @@ sun: 'https://www.sonnenverlauf.de/#/48.2065,16.3916,19/2023.07.01/13:16/1/0'
 var geocodeapi='http://data.wien.gv.at/daten/OGDAddressService.svc/GetAddressInfo?crs=EPSG:3857&Address=';
 
 var map;
-var foundbuilding=false;
+var search_done=false;
 var kote=0;
 
 async function fetchData(addr)
@@ -54,50 +54,97 @@ vectorLayer.getSource().on('change',
     const source = evt.target;
     const numFeatures = source.getFeatures().length;
 
-    if (foundbuilding || source.getState() != 'ready' || numFeatures<2) 
+    if (search_done || source.getState() != 'ready' || numFeatures<2) 
         return;
 
     console.log("marching the sundir");
     var centerCoordinates = map.getView().getCenter();
 
-    features=[]
-    for (let i = 10; i <= 150; i+=10) {
+    features = vectorLayer.getSource().getFeaturesAtCoordinate(centerCoordinates)
+    startbuilding_id=features[0].getProperties().BW_GEB_ID;
+    console.log ("startbuilding "+startbuilding_id);
+
+    //TODO: get building id at start
+    // dont stop till we got a new building id
+
+    outside_startbuilding=[];
+    for (let i = 1; i <= 150; i+=1) {
         coords=[centerCoordinates[0] - Math.cos(sunAzimuth)*i,
             centerCoordinates[1] - Math.sin(sunAzimuth)*i];
 
         features = vectorLayer.getSource().getFeaturesAtCoordinate(coords);
-        if (features.length >0)
+        if (features.length==0 && outside_startbuilding.length==0)
         {
-            console.log(features);
-            console.log(
-                "found building: "+ "id: " + features[0].getProperties().FMZK_ID+
-                " height: "+features[0].getProperties().O_KOTE
-                );
-            kote=features[0].getProperties().O_KOTE;
+            console.log ("found outside, setting first outside_startbuilding point")
+            outside_startbuilding=coords;
+        }
 
-            if (!foundbuilding)
-            {
-                foundbuilding=true;
-                var lineString = new ol.geom.LineString([
-                    centerCoordinates,  
-                        [centerCoordinates[0] - Math.cos(sunAzimuth) *50, 
-                        centerCoordinates[1] - Math.sin(sunAzimuth) *50], 
+
+        nextbuilding_id=0
+        if (features.length==0)
+        {
+           //         continue
+        }
+        else
+            nextbuilding_id=features[0].getProperties().BW_GEB_ID
+
+        // to calc dist, Haversine formula is designed for spherical Earth, and Web Mercator uses a slightly different projection. for short distances it's ok
+        if (outside_startbuilding.length==0)
+        {
+            dX=coords[0]-centerCoordinates[0];
+            dY=coords[1]-centerCoordinates[1];
+            dist=Math.sqrt(dX*dX + dY * dY);
+            console.log(
+            "building id " + nextbuilding_id +
+             " dist "+dist
+            );
+        }
+        else
+        {
+            dX=coords[0]-outside_startbuilding[0];
+            dY=coords[1]-outside_startbuilding[1];
+            dist=Math.sqrt(dX*dX + dY * dY);
+            console.log(
+            "OUTSIDE building id " + nextbuilding_id +
+            " dist "+dist
+            );
+        }
+        
+                
+        if (nextbuilding_id==startbuilding_id || features.length==0)
+        {
+            continue;
+        }
+        kote=features[0].getProperties().O_KOTE;
+        console.log("angle to top of building "+ Math.atan2(kote, dist) * (180 / Math.PI));
+
+        if (!search_done)
+        {
+            search_done=true;
+            draw_search_line(centerCoordinates, 'red');
+            draw_search_line(outside_startbuilding, 'green');
+            break;
+        }
+        
+    }
+});
+
+function draw_search_line(centerCoordinates, col)
+{
+    var lineString = new ol.geom.LineString([
+                    centerCoordinates,  coords 
                 ]);
                 var lineFeature = new ol.Feature(lineString);   
                 lineFeature.setStyle(
                     new ol.style.Style({
                         stroke: new ol.style.Stroke({
-                        color: 'red',
-                        width: 2,  
+                        color: col,
+                        width: 1,  
                         }),
                     })
                     );
                 vectorLayer.getSource().addFeature(lineFeature);
-                        break;
-            }
-        }
-    }
-});
+}
 
 ///////////////////////////////////////
 
