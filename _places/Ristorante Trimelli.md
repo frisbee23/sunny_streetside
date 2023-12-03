@@ -89,6 +89,8 @@ version=1.1.0
              [centerCoordinates[0] - 50, centerCoordinates[1] - 50], 
         ]);
         var lineFeature = new ol.Feature(lineString);
+
+
         lineFeature.setStyle(
             new ol.style.Style({
                 stroke: new ol.style.Stroke({
@@ -121,6 +123,7 @@ version=1.1.0
 
 
       map.forEachFeatureAtPixel(event.pixel, function (feature) {
+        console.log(typeof feature)
         console.log('Clicked on feature:', feature.getProperties());
       });
     });

@@ -10,13 +10,12 @@ sun: 'https://www.sonnenverlauf.de/#/48.2065,16.3916,19/2023.07.01/13:16/1/0'
 
 <script>
 
-
-
-
 // https://digitales.wien.gv.at/wp-content/uploads/sites/47/2019/01/adressservice-doku.pdf
 var geocodeapi='http://data.wien.gv.at/daten/OGDAddressService.svc/GetAddressInfo?crs=EPSG:3857&Address=';
 
 var map;
+var foundbuilding=false;
+var kote=0;
 
 async function fetchData(addr)
 {
@@ -49,12 +48,13 @@ async function fetchData(addr)
             }),
         });
 
+
 vectorLayer.getSource().on('change', 
     function(evt){
     const source = evt.target;
     const numFeatures = source.getFeatures().length;
 
-    if (source.getState() != 'ready' || numFeatures<2) 
+    if (foundbuilding || source.getState() != 'ready' || numFeatures<2) 
         return;
 
     console.log("marching the sundir");
@@ -69,37 +69,37 @@ vectorLayer.getSource().on('change',
         if (features.length >0)
         {
             console.log(features);
-            break;
+            console.log(
+                "found building: "+ "id: " + features[0].getProperties().FMZK_ID+
+                " height: "+features[0].getProperties().O_KOTE
+                );
+            kote=features[0].getProperties().O_KOTE;
+
+            if (!foundbuilding)
+            {
+                foundbuilding=true;
+                var lineString = new ol.geom.LineString([
+                    centerCoordinates,  
+                        [centerCoordinates[0] - Math.cos(sunAzimuth) *50, 
+                        centerCoordinates[1] - Math.sin(sunAzimuth) *50], 
+                ]);
+                var lineFeature = new ol.Feature(lineString);   
+                lineFeature.setStyle(
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                        color: 'red',
+                        width: 2,  
+                        }),
+                    })
+                    );
+                vectorLayer.getSource().addFeature(lineFeature);
+                        break;
+            }
         }
     }
 });
 
-const onLoadEndCallback = () => {
-    console.log('Map load complete!');
-    var centerCoordinates = map.getView().getCenter();
-
-    var lineString = new ol.geom.LineString([
-        centerCoordinates,  
-            [centerCoordinates[0] - Math.cos(sunAzimuth) *50, 
-            centerCoordinates[1] - Math.sin(sunAzimuth) *50], 
-    ]);
-    var lineFeature = new ol.Feature(lineString);   
-    lineFeature.setStyle(
-        new ol.style.Style({
-            stroke: new ol.style.Stroke({
-            color: 'red',
-            width: 2,  
-            }),
-        })
-        );
-    vectorLayer.getSource().addFeature(lineFeature);
-}
-
-
-
-
 ///////////////////////////////////////
-
 
 async function createMap(addr) //130
 {
@@ -138,15 +138,13 @@ async function createMap(addr) //130
     } catch (error) {
         console.error('Error creating map:', error);
     }
-
-     map.on('loadend', onLoadEndCallback);
 }
   
 // taste of india coords
 const latitude =  48.20644906; 
 const longitude = 16.39176681;
 
-const futureDate = new Date(new Date().getTime() - 5 * 60 * 60 * 1000);
+const futureDate = new Date(new Date().getTime() - 2 * 60 * 60 * 1000 + 1000*60*8);
 console.log (futureDate)
 const sunPosition = SunCalc.getPosition(
      //new Date(),
@@ -160,7 +158,7 @@ const sunAlt = sunPosition.altitude * 180 / Math.PI;
     
 createMap("Marxergasse%2019");
 
-
+console.log("kote: "+kote)
 
 
  
