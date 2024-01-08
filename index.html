@@ -2,6 +2,9 @@
 layout: default
 title: Blog
 ---
+
+<!-- main js script includes are in _layouts/default.html -->
+
 <h1>current weather</h1>
 <!-- https://weatherwidget.io/ -->
 <a class="weatherwidget-io" href="https://forecast7.com/en/48d2116d37/vienna/" data-label_1="VIENNA" data-label_2="WEATHER" data-font="Open Sans" data-icons="Climacons Animated" data-mode="Current" data-theme="pure" >VIENNA WEATHER</a>
@@ -13,7 +16,8 @@ title: Blog
 <p id="sunAngle"></p>
 <p id="sunPosition"></p>
 
-  <script src="https://cdn.jsdelivr.net/npm/suncalc"></script>
+map:
+<div id="map" style="height: 400px;"></div>
 
   <script>
     // https://www.npmjs.com/package/suncalc
@@ -29,10 +33,88 @@ title: Blog
     document.getElementById('sunAngle').textContent = `Sun's altitude: ${sunAltitude.toFixed(2)} degrees`;
     document.getElementById('sunPosition').textContent = `position(azimuth): ${sunPosition.azimuth.toFixed(2)} degrees`;
   </script>
+  
+ 
+  <script>
+   
+    (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+      key: keys_google_places_api,
+      v: "beta",
+    });
+
+let map;
+let center;
+
+async function initMap() {
+  const { Map } = await google.maps.importLibrary("maps");
+
+  center = { lat: 48.210033, lng: 16.363449 };
+  map = new Map(document.getElementById("map"), {
+    center: center,
+    zoom: 14,
+    // ...
+  });
+  findPlaces();
+}
+
+
+// https://developers.google.com/maps/documentation/javascript/reference/3.54/place?hl=en
+// https://developers.google.com/maps/documentation/places/web-service/place-types#food-and-drink
+async function findPlaces() {
+
+
+  const { LatLngBounds } = await google.maps.importLibrary("core");
+
+  var bounds = new google.maps.LatLngBounds(new google.maps.LatLng(48.210033, 16.363449),
+                                            new google.maps.LatLng(48.210033, 16.363449));
+
+  const { Place } = await google.maps.importLibrary("places");
+  //@ts-ignore
+  const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+  const request = {
+    textQuery: "cafes in vienna, austria",
+    fields: ["displayName", "location", "businessStatus"],
+    includedType: "cafe",
+    isOpenNow: true,
+    language: "en-US",
+    maxResultCount: 10,
+    region: "at",
+    useStrictTypeFiltering: false,
+    // rankBy: SearchByTextRankBy.DISTANCE // already the default
+    //locationRestriction: bounds
+  };
+  //@ts-ignore
+  const { places } = await Place.searchByText(request);
+
+  if (places.length) {
+    console.log(places);
+
+    const { LatLngBounds } = await google.maps.importLibrary("core");
+    const bounds = new LatLngBounds();
+
+   
+    places.forEach((place) => {
+      /*const markerView = new AdvancedMarkerElement({
+        map,
+        position: place.location,
+        title: place.displayName,
+      });
+      bounds.extend(place.location);
+      */
+      console.log(place);
+    });
+    //map.setCenter(bounds.getCenter());
+  } else {
+    console.log("No results");
+  }
+}
+
+initMap();
+  </script>
+
+
   <script src="assets/js/main.js"></script>
-  <script async
-    src="https://maps.googleapis.com/maps/api/js?key=&libraries=places&callback=initMap">
-</script>
+
 <h1>All Places</h1>
 
 {% for place in site.places %}
