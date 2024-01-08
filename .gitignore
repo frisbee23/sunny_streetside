@@ -13,3 +13,5 @@ vendor
 
 RUN
 _notes/*
+
+assets/js/keys-donotcommit.js
