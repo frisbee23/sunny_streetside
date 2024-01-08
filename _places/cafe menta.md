@@ -10,6 +10,8 @@ sun: 'https://www.sonnenverlauf.de/#/48.2111,16.3903,19/2023.07.01/14:36/1/0'
 
 <script>
 
+
+
 // https://digitales.wien.gv.at/wp-content/uploads/sites/47/2019/01/adressservice-doku.pdf
 var geocodeapi='http://data.wien.gv.at/daten/OGDAddressService.svc/GetAddressInfo?crs=EPSG:31256&Address=';
 
@@ -191,7 +193,8 @@ async function createMap(addr) //130
 const latitude =  48.2112; 
 const longitude = 16.3903;
 
-const futureDate = new Date(new Date().getTime() - 2 * 60 * 60 * 1000 + 1000*60*8);
+// TODO use current date
+const futureDate = new Date(new Date().getTime() - 18 * 60 * 60 * 1000 + 1000*60*8);
 console.log (futureDate)
 const sunPosition = SunCalc.getPosition(
      //new Date(),

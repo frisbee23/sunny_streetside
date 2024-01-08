@@ -14,12 +14,13 @@ title: Blog
 <p id="sunPosition"></p>
 
   <script src="https://cdn.jsdelivr.net/npm/suncalc"></script>
+
   <script>
     // https://www.npmjs.com/package/suncalc
 
     const now = new Date();
 
-    const latitude = 48.210033; // Example: San Francisco, CA
+    const latitude = 48.210033; 
     const longitude = 16.363449;
 
     const sunPosition = SunCalc.getPosition(now, latitude, longitude);
@@ -28,14 +29,17 @@ title: Blog
     document.getElementById('sunAngle').textContent = `Sun's altitude: ${sunAltitude.toFixed(2)} degrees`;
     document.getElementById('sunPosition').textContent = `position(azimuth): ${sunPosition.azimuth.toFixed(2)} degrees`;
   </script>
+  <script src="assets/js/main.js"></script>
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=&libraries=places&callback=initMap">
+</script>
 <h1>All Places</h1>
 
 {% for place in site.places %}
   <h2> <a href="{{ place.url }}">{{ place.name }} </a></h2>
     outlook: {{ place.outlook }} <br>
-    outlook: {{ place.outlook }} <br>
     website: <a href="{{ place.web }}">{{ place.web }}</a> <br>
     maps: <a href="{{ place.maps }}">{{ place.address }}</a> <br>
-    sun: <a href="{{ place.sun }}">sonnenverlauf.de</a> <br>
-  <p> {{ place.content | markdownify }}</p>
+    sun: <a href="{{ place.sun }}">sonnen verlauf</a> <br>
+  <p> {{ // place.content | markdownify }}</p><br>
 {% endfor %}
