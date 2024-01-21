@@ -1,33 +1,41 @@
 
 
-async function initOSMap()
+async function initOSMap(extent)
 {
-  console.log('init os map');
-     //proj4.defs("EPSG:31256","+proj=tmerc +lat_0=0 +lon_0=16.33333333333333 +k=1 +x_0=0 +y_0=-5000000 +ellps=bessel +towgs84=577.326,90.129,463.919,5.137,1.474,5.297,2.4232 +units=m +no_defs +type=crs");
-  proj4.defs("EPSG:31256", "+proj=tmerc +lat_0=0 +lon_0=16.33333333333333 +k=1 +x_0=0 +y_0=-5000000 +ellps=bessel +towgs84=577.326,90.129,463.919,5.137,1.474,5.297,2.4232 +units=m +no_defs");
-
-  
-  // last https://github.com/openlayers/openlayers/issues/11632
-  
+  extent=extent.PromiseResult;
+  console.log('init os map, extent:', );
+  //proj4.defs("EPSG:31256","+proj=tmerc +lat_0=0 +lon_0=16.33333333333333 +k=1 +x_0=0 +y_0=-5000000 +ellps=bessel +towgs84=577.326,90.129,463.919,5.137,1.474,5.297,2.4232 +units=m +no_defs +type=crs");
+  //proj4.defs("EPSG:31256", "+proj=tmerc +lat_0=0 +lon_0=16.33333333333333 +k=1 +x_0=0 +y_0=-5000000 +ellps=bessel +towgs84=577.326,90.129,463.919,5.137,1.474,5.297,2.4232 +units=m +no_defs");
   //proj4.defs("EPSG:31256",  'GEOGCS["MGI",DATUM["Militar-Geographische Institut",SPHEROID["Bessel 1841",6377397.155,299.1528128,AUTHORITY["EPSG","7004"]],AUTHORITY["EPSG","6312"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9102"]],AXIS["Lat",north],AXIS["Lon",east],AUTHORITY["EPSG","4312"]],PROJECTION["Transverse Mercator",AUTHORITY["EPSG","18006"]],PARAMETER["Latitude of natural origin",0,AUTHORITY["EPSG","8801"]],PARAMETER["Longitude of natural origin",16.3333333333336,AUTHORITY["EPSG","8802"]],PARAMETER["Scale factor at natural origin",1,AUTHORITY["EPSG","8805"]],PARAMETER["False easting",0,AUTHORITY["EPSG","8806"]],PARAMETER["False northing",-5000000,AUTHORITY["EPSG","8807"]],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",north],AXIS["Y",east],AUTHORITY["EPSG","31256"]]')
- 
+  
+  //  last wir hatten vektor layer in 31256 und wenn wir
+  // hier mit proj4 31256 definerit haben,
+  // um spaeter damit zu konvertieren, wurden die feature map nimam anzeigt
+  //https://github.com/openlayers/openlayers/issues/11632
   //ol.proj.proj4.register(proj4);
-  const epsg31256projection=ol.proj.get('EPSG:31256');
-  console.log(epsg31256projection);
+  //const epsg31256projection=ol.proj.get('EPSG:31256');
+  //console.log(epsg31256projection);
 
-  var vectorLayer = new ol.layer.Vector({ 
+  //https://digitales.wien.gv.at/open-data/geowebservices/#wfs
+  // das unten hat gut funktioniert mit srcName=EPSG:31256
+  // auch bei bbox war das mit , epsg:31256 angegeben,
+  // siehe commit 'jan24 commit'
+  vectorLayer = new ol.layer.Vector({ 
     source: new ol.source.Vector({
         format: new ol.format.GeoJSON(),
         url: function (extent) {
-            console.log ('wfs request');
-        return 'https://data.wien.gv.at/daten/geo' +
-        '?service=WFS' + 
-        '&request=GetFeature' +
-        '&version=1.1.0' +
-        '&typeName=ogdwien:FMZKBKMOGD'+
-        '&srsName=EPSG:31256' +
-        '&outputFormat=application/json' +
-        '&bbox=' + extent.join(',') + ',EPSG:31256';
+            //console.log ('wfs extent',extent);
+            url='https://data.wien.gv.at/daten/geo' +
+            '?service=WFS' + 
+            '&request=GetFeature' +
+            '&version=1.1.0' +
+            '&typeName=ogdwien:FMZKBKMOGD'+
+            '&srsName=EPSG:3857' +
+            '&outputFormat=application/json' +
+            '&bbox=' + extent.join(',') + ',EPSG:3857';
+            //console.log ('wfs request url:', url);
+
+        return url;
         },
         strategy: ol.loadingstrategy.bbox,
     }),
@@ -35,50 +43,36 @@ async function initOSMap()
 
   try {
        //TODO don't hardcode
-       const coordinates = await fetchData(
+       /*const coordinates = await fetchData(
         //"Löwengasse%2041");
         "Radetzkyplatz%204"
         );
-       console.log("initosmap: coordinates: "+coordinates);
+        */
+       const coordinates= ol.proj.fromLonLat([poslng, poslat]);
+       //console.log("initosmap: coordinates: "+coordinates);
 
         osmap = new ol.Map({
             target: 'domOSmap',
+            projection: 'EPSG:3857',
             layers: [
                 new ol.layer.Tile({
                 source: new ol.source.OSM(),
+                
                 }),
                 vectorLayer,
             ],
-            projection: epsg31256projection,
             view: new ol.View({
+                //center: coordinates,
                 center: coordinates,
                 zoom: 19,
+                extent: extent
             }),
         });
-
-        var lineString = new ol.geom.LineString([
-                  coordinates,  coordinates+1
-                ]);
-                var lineFeature = new ol.Feature(lineString);   
-                lineFeature.setStyle(
-                    new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                        color: 'red',
-                        width: 1,  
-                        }),
-                    })
-                    );
-        vectorLayer.getSource().addFeature(lineFeature);
        
     } catch (error) {
         console.error('Error creating map:', error);
     }
-    // last: when this is commented in, we loose the features display
-
-   
-}
-
-vectorLayer.getSource().on('change', 
+    vectorLayer.getSource().on('change', 
     function(evt)
     {
       const source = evt.target;
@@ -86,12 +80,14 @@ vectorLayer.getSource().on('change',
       console.log ('vectorlayer::source::onchange -> feature count: '+numFeatures);
     });
 
-vectorLayer.getSource().on('featuresloadend', 
+    vectorLayer.getSource().on('featuresloadend', 
     function(evt)
     {
-      
-      console.log ('vectorlayer::source::onfeatureloadend');
+        console.log ('vectorlayer::source::onfeatureloadend empty func');
     });  
+}
+
+
 
 async function fetchFeaturesLatlang(lat, lng)
 {

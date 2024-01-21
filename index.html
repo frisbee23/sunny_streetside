@@ -92,23 +92,36 @@ async function findPlaces()
     var swm = ol.proj.fromLonLat([sw.lng(), sw.lat()]);
     var nem= ol.proj.fromLonLat([ne.lng(),ne.lat()])
     bbox=[  swm[0], swm[1],   nem[0], nem[1]   ]
-    console.log('bbox: ', bbox)
-    let bbox31256 = ol.proj.transformExtent(bbox, 'EPSG:3857', 'EPSG:31256')
+    console.log('bbox (metres): ', bbox)
+    //let bbox31256 = ol.proj.transformExtent(bbox, 'EPSG:3857', 'EPSG:31256')
 
-    console.log('bbox31256:   ', bbox31256)
+    //console.log('bbox31256:   ', bbox31256)
 
-    view=osmap.getView();
+    /*view=osmap.getView();
     extent=view.calculateExtent()
     console.log('current osmap viewextent: ', extent)
+    */
+    
+    
+    // TODO: vl bissl groesser um das naechste gebaeude auch noch mitreinzukriegen
 
-    view.fit(bbox31256, osmap.getSize())
-    extent=view.calculateExtent(osmap.getSize())
-    console.log('after fit osmap viewextent: ', extent)
+    return bbox;
+    //vectorLayer.getSource().on('featuresloadend',    onfeatures_calcsunny    );  
 
   } else {
     console.log("No results");
   }
+  console.log('findplaces end')
 }
+
+
+function onfeatures_calcsunny(evt)
+{
+  console.log ('vectorlayer::source::onfeatureloadend my func');
+}
+
+
+
 
 async function getfeaturesofplaces()
 {
@@ -180,11 +193,15 @@ async function initMap()
 }
 
 
-initOSMap(); //openstreet
 
-//initMap(); //google
 
-//findPlaces();
+initMap(); //google
+
+mybbox=findPlaces();
+console.log ('global, mybbox', mybbox)
+
+initOSMap(mybbox); //openstreet
+//view.fit(bbox, osmap.getSize())
 
 </script>
 

@@ -2,35 +2,18 @@
 
 let map; // googlemap
 var osmap; // openstreet
+var vectorLayer;
 let center;
 
-var poslng=16.39054876321797;
-var poslat=48.210862381899666;
+var poslng=16.390181530090295;
+var poslat=48.21125728190052;
+
 
 var radiusInMeters=1000/2;
 
 var myplaces;
 
 var geocodeapi='http://data.wien.gv.at/daten/OGDAddressService.svc/GetAddressInfo?crs=EPSG:31256&Address=';
-
-var vectorLayer = new ol.layer.Vector({ 
-            source: new ol.source.Vector({
-                format: new ol.format.GeoJSON(),
-                url: function (extent) {
-                    console.log ('wfs request');
-                return 'https://data.wien.gv.at/daten/geo' +
-                '?service=WFS' + 
-                '&request=GetFeature' +
-                '&version=1.1.0' +
-                '&typeName=ogdwien:FMZKBKMOGD'+
-                '&srsName=EPSG:31256' +
-                '&outputFormat=application/json' +
-                '&bbox=' + extent.join(',') + ',EPSG:31256';
-                },
-                strategy: ol.loadingstrategy.bbox,
-            }),
-        });
-
 
 const futureDate = new Date(new Date().getTime() - 10 * 60 * 60 * 1000 + 1000*60*8);
 
