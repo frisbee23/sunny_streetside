@@ -25,6 +25,7 @@ async function fetchData(addr)
        const response= await fetch(geocodeapi+addr)
        const data= await response.json();
        mypoint=data.features[0].geometry.coordinates;
+       console.log ('coordinates from geocode api stadtwien to epsg:31256 '+mypoint);
        return mypoint;
 
     } catch (error) {
@@ -56,12 +57,17 @@ vectorLayer.getSource().on('change',
     const source = evt.target;
     const numFeatures = source.getFeatures().length;
 
+    
     if (search_done || source.getState() != 'ready' || numFeatures<2) 
+    {
+        console.log('onchange, waiting');
         return;
+    }
+        
 
-    console.log("marching the sundir");
+    
     var centerCoordinates = map.getView().getCenter();
-
+    console.log("marching the sundir/getfeatures at coordinate: "+centerCoordinates);
     features = vectorLayer.getSource().getFeaturesAtCoordinate(centerCoordinates)
     startbuilding_id=features[0].getProperties().BW_GEB_ID;
     console.log ("startbuilding "+startbuilding_id);
@@ -189,7 +195,7 @@ async function createMap(addr) //130
     }
 }
   
-// taste of india coords
+
 const latitude =  48.2112; 
 const longitude = 16.3903;
 
@@ -207,6 +213,7 @@ const sunAzimuth = Math.PI /2 - sunPosition.azimuth;
 const sunAlt = sunPosition.altitude * 180 / Math.PI;
     
 createMap("Radetzkyplatz%204");
+//createMap("Löwengasse%2041");
 console.log("kote: "+kote)
 
 // usecases:

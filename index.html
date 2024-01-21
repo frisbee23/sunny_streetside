@@ -2,91 +2,54 @@
 layout: default
 title: Blog
 ---
-
 <!-- main js script includes are in _layouts/default.html -->
-
-<h1>current weather</h1>
+<!-- h1>current weather</h1 -->
 <!-- https://weatherwidget.io/ -->
-<a class="weatherwidget-io" href="https://forecast7.com/en/48d2116d37/vienna/" data-label_1="VIENNA" data-label_2="WEATHER" data-font="Open Sans" data-icons="Climacons Animated" data-mode="Current" data-theme="pure" >VIENNA WEATHER</a>
+<!-- a class="weatherwidget-io" href="https://forecast7.com/en/48d2116d37/vienna/" data-label_1="VIENNA" data-label_2="WEATHER" data-font="Open Sans" data-icons="Climacons Animated" data-mode="Current" data-theme="pure" >VIENNA WEATHER</a -->
 <script>
-!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
+//!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
 </script>
 
-<h1>current sun data</h1>
+<!-- h1>current sun data</h1 -->
 <p id="sunAngle"></p>
 <p id="sunPosition"></p>
+<div id="domgmap" style="height: 400px;"></div>
 
-map:
-<div id="map" style="height: 400px;"></div>
+<div id="domOSmap" class="map"></div>
 
+<script src="assets/js/main.js"></script>
+<script src="assets/js/osmap.js"></script>
+<script src="assets/js/sunny.js"></script>
 <script>
-// https://www.npmjs.com/package/suncalc
+////////////////////////////////////////////
 
-const now = new Date();
 
-const latitude = 48.210033; 
-const longitude = 16.363449;
 
-const sunPosition = SunCalc.getPosition(now, latitude, longitude);
-const sunAltitude = sunPosition.altitude * (180 / Math.PI);
-
-document.getElementById('sunAngle').textContent = `Sun's altitude: ${sunAltitude.toFixed(2)} degrees`;
-document.getElementById('sunPosition').textContent = `position(azimuth): ${sunPosition.azimuth.toFixed(2)} degrees`;
-</script>
-  
- 
-<script>
-
-let map;
-let center;
-
-var poslng=16.39054876321797;
-var poslat=48.210862381899666;
-
-async function initMap() {
-  const { Map } = await google.maps.importLibrary("maps");
-
-  center = { lat: poslat, lng: poslng };
-  map = new Map(document.getElementById("map"), {
-    center: center,
-    zoom: 14,
-    mapId: 'DEMO_MAP_ID' //TODO see aera
-  });
-
-  const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
-  const pinScaled = new PinElement({      scale: 2,  });
-  const markerView = new AdvancedMarkerElement({
-        map,
-        position: { lat: poslat, lng: poslng },
-        title: 'circle',
-        content: pinScaled.element
-      });
-      
-  findPlaces();
-}
 // maybe checkout https://developers.google.com/maps/documentation/javascript/geolocation
-
 // https://developers.google.com/maps/documentation/javascript/reference/3.54/place?hl=en
-
 // https://developers.google.com/maps/documentation/places/web-service/place-types#food-and-drink
-async function findPlaces() {
-
+async function findPlaces() 
+{
+  console.log('findPlaces');
   const { Place } = await google.maps.importLibrary("places");
   const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
   const { Circle } = await google.maps.importLibrary("core");
+
   const mycircle= new google.maps.Circle ( 
     {center: {lat: poslat, lng: poslng}, radius: 500} );
 
   const { LatLngBounds } = await google.maps.importLibrary("core");
-  var radiusInMeters=1000/2;
+  
   var radiusInDegrees = radiusInMeters / 111300;
   var mybounds = new google.maps.LatLngBounds({lat: poslat-radiusInDegrees, lng: poslng-radiusInDegrees}, // sw
                                               {lat: poslat+radiusInDegrees, lng: poslng+radiusInDegrees}); // ne
-   
+  console.log ('mybounds: '+mybounds);
+
   // https://developers.google.com/maps/documentation/javascript/reference/place#SearchByTextRequest
+  //https://developers.google.com/maps/documentation/javascript/place-class-data-fields
   const request = {
     textQuery: "cafe in vienna, austria",
-    fields: ["displayName", "location", "businessStatus"],
+    fields: ["displayName", "location", "businessStatus", "formattedAddress"],
     includedType: "cafe",
     //isOpenNow: true,
     language: "en-US",
@@ -97,16 +60,67 @@ async function findPlaces() {
     //locationBias: mycircle
     locationRestriction: mybounds
   };
+
   const { places } = await Place.searchByText(request);
+  myplaces=places;
 
   if (places.length) {
+    //console.log(places);
+
+    const { LatLngBounds } = await google.maps.importLibrary("core");
+    const bounds = new LatLngBounds();
+
+    // Loop through and get all the results.
+    places.forEach((place) => {
+      const markerView = new AdvancedMarkerElement({
+        map,
+        position: place.location,
+        title: place.displayName,
+      });
+
+      bounds.extend(place.location);
+      console.log(place);
+      console.log(bounds)
+    });
+    map.setCenter(bounds.getCenter());
+
+    // set bbox to mybounds on osmap to fetch features
+    //  extent: An array of numbers representing an extent: [minx, miny, maxx, maxy].
+    sw=bounds.getSouthWest()
+    ne=bounds.getNorthEast()
+
+    var swm = ol.proj.fromLonLat([sw.lng(), sw.lat()]);
+    var nem= ol.proj.fromLonLat([ne.lng(),ne.lat()])
+    bbox=[  swm[0], swm[1],   nem[0], nem[1]   ]
+    console.log('bbox: ', bbox)
+    let bbox31256 = ol.proj.transformExtent(bbox, 'EPSG:3857', 'EPSG:31256')
+
+    console.log('bbox31256:   ', bbox31256)
+
+    view=osmap.getView();
+    extent=view.calculateExtent()
+    console.log('current osmap viewextent: ', extent)
+
+    view.fit(bbox31256, osmap.getSize())
+    extent=view.calculateExtent(osmap.getSize())
+    console.log('after fit osmap viewextent: ', extent)
+
+  } else {
+    console.log("No results");
+  }
+}
+
+async function getfeaturesofplaces()
+{
+ 
+  if (myplaces.length) {
     //console.log(places);
 
     const { LatLngBounds } = await google.maps.importLibrary("core");
     
     const bounds = new LatLngBounds();
        
-    places.forEach((place) => {
+    myplaces.every((place) => {
       const markerView = new AdvancedMarkerElement({
         map,
         position: place.location,
@@ -114,32 +128,78 @@ async function findPlaces() {
       });
       bounds.extend(place.location);
       
-      console.log(place.g.displayName, place.g.buisnessStatus );
-     
+      console.log(place.g.displayName, place.location.lat(), place.location.lng(), 
+      place.formattedAddress );
+   
+      ////////////////////
+      try {
+        fetchFeatures(place.formattedAddress);
+      }
+      catch (error)
+      { 
+         console.error("Error getting geolocation:", error)
+      }
+      //  todo later:
+      //calcsunniness(futureDate, place.location.lat(), place.location.lng());
+      
+      // todo - tahts a break, remove
+      return false;
+      // thats a needed continue
+      return true; 
     });
     map.setCenter(bounds.getCenter());
   } else {
     console.log("No results");
   }
+
 }
 
-initMap();
 
 
-// unten liquid:
- //{{   place.content | markdownify }}
-  </script>
+async function initMap() 
+{
+  console.log ('initMap')
+  const { Map } = await google.maps.importLibrary("maps");
+
+  center = { lat: poslat, lng: poslng };
+  map = new Map(document.getElementById("domgmap"), {
+    center: center,
+    zoom: 16,
+    mapId: 'DEMO_MAP_ID' //TODO see aera
+  });
+
+ // const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+ // const pinScaled = new PinElement({      scale: 2,  });
+ /* const markerView = new AdvancedMarkerElement({
+        map,
+        position: { lat: poslat, lng: poslng },
+        title: 'circle',
+        content: pinScaled.element
+      });*/
+
+}
 
 
-  <script src="assets/js/main.js"></script>
+initOSMap(); //openstreet
+
+//initMap(); //google
+
+//findPlaces();
+
+</script>
+
 
 <h1>All Places</h1>
-
 {% for place in site.places %}
   <h2> <a href="{{ place.url }}">{{ place.name }} </a></h2>
     outlook: {{ place.outlook }} <br>
     website: <a href="{{ place.web }}">{{ place.web }}</a> <br>
     maps: <a href="{{ place.maps }}">{{ place.address }}</a> <br>
     sun: <a href="{{ place.sun }}">sonnen verlauf</a> <br>
+    <!-- 
+      {{ place.content | markdownify }}
+    -->
   <p> </p><br>
 {% endfor %}
+
+//TODO: move all js to main.js so we get syntax highlight and so on

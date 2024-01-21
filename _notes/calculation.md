@@ -14,3 +14,7 @@ Vienna, Austria
 Latitude and longitude coordinates are: **48.210033, 16.363449**.
 
 https://docs.google.com/spreadsheets/d/1_O1_-eMnfZK7TQ7PQ8dTCV1tmMa1PPTZ/edit#gid=683662663
+
+
+
+https://voibos.rechenraum.com/voibos/voibos?name=sonnengang&Koordinate=-41390,228170&CRS=31254&Datum=11-21:12:34&H=2
