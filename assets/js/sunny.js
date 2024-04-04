@@ -6,12 +6,12 @@ function calcsun(evt)
   const numFeatures = evt.target.getFeatures().length;
   console.log ('onfeatureloadend feature count: '+numFeatures);
 
-  //const futureDate =  new Date(2024, 5, 21,12,0,0);
-  //new Date(new Date().getTime() - 12 * 60 * 60 * 1000 + 1000*60*8);
-  console.log ('sun at date:', futureDate)
+  const myDate =  //new Date(2024, 5, 21,12,0,0);
+  new Date() // - 12 * 60 * 60 * 1000 + 1000*60*8);
+  console.log ('sun at current date:', myDate)
   const sunPosition = SunCalc.getPosition(
-      new Date(),
-      //futureDate, 
+      
+      myDate, 
       poslat, poslng); //TODO: do for each places' coords
 
   // adjust so angle is measured counterclockwise 
