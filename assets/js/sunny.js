@@ -10,8 +10,8 @@ function calcsun(evt)
   //new Date(new Date().getTime() - 12 * 60 * 60 * 1000 + 1000*60*8);
   console.log ('sun at date:', futureDate)
   const sunPosition = SunCalc.getPosition(
-      //new Date(),
-      futureDate, 
+      new Date(),
+      //futureDate, 
       poslat, poslng); //TODO: do for each places' coords
 
   // adjust so angle is measured counterclockwise 
