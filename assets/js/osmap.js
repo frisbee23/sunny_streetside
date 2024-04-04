@@ -1,9 +1,9 @@
 
-
+// [] nodejs
 async function initOSMap(extent)
 {
-  extent=extent.PromiseResult;
-  console.log('init os map, extent:', );
+  
+  console.log('init os map, extent:',extent );
   //proj4.defs("EPSG:31256","+proj=tmerc +lat_0=0 +lon_0=16.33333333333333 +k=1 +x_0=0 +y_0=-5000000 +ellps=bessel +towgs84=577.326,90.129,463.919,5.137,1.474,5.297,2.4232 +units=m +no_defs +type=crs");
   //proj4.defs("EPSG:31256", "+proj=tmerc +lat_0=0 +lon_0=16.33333333333333 +k=1 +x_0=0 +y_0=-5000000 +ellps=bessel +towgs84=577.326,90.129,463.919,5.137,1.474,5.297,2.4232 +units=m +no_defs");
   //proj4.defs("EPSG:31256",  'GEOGCS["MGI",DATUM["Militar-Geographische Institut",SPHEROID["Bessel 1841",6377397.155,299.1528128,AUTHORITY["EPSG","7004"]],AUTHORITY["EPSG","6312"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9102"]],AXIS["Lat",north],AXIS["Lon",east],AUTHORITY["EPSG","4312"]],PROJECTION["Transverse Mercator",AUTHORITY["EPSG","18006"]],PARAMETER["Latitude of natural origin",0,AUTHORITY["EPSG","8801"]],PARAMETER["Longitude of natural origin",16.3333333333336,AUTHORITY["EPSG","8802"]],PARAMETER["Scale factor at natural origin",1,AUTHORITY["EPSG","8805"]],PARAMETER["False easting",0,AUTHORITY["EPSG","8806"]],PARAMETER["False northing",-5000000,AUTHORITY["EPSG","8807"]],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",north],AXIS["Y",east],AUTHORITY["EPSG","31256"]]')
@@ -41,37 +41,82 @@ async function initOSMap(extent)
     }),
   });
 
-  try {
-       //TODO don't hardcode
-       /*const coordinates = await fetchData(
-        //"Löwengasse%2041");
-        "Radetzkyplatz%204"
-        );
-        */
-       const coordinates= ol.proj.fromLonLat([poslng, poslat]);
-       //console.log("initosmap: coordinates: "+coordinates);
 
-        osmap = new ol.Map({
-            target: 'domOSmap',
-            projection: 'EPSG:3857',
-            layers: [
-                new ol.layer.Tile({
-                source: new ol.source.OSM(),
-                
-                }),
-                vectorLayer,
-            ],
-            view: new ol.View({
-                //center: coordinates,
-                center: coordinates,
-                zoom: 19,
-                extent: extent
+  bounds=extent;
+  const boundingBox = new ol.geom.Polygon([
+      [
+        [bounds[0], bounds[1]],
+        [bounds[0], bounds[3]],
+        [bounds[2], bounds[3]],
+        [bounds[2], bounds[1]],
+        [bounds[0], bounds[1]],
+      ],
+    ]);
+  const boundingBoxFeature = new ol.Feature(boundingBox);
+
+  vectorLayer2 = new ol.layer.Vector({
+      source: new ol.source.Vector({
+        features: [boundingBoxFeature],
+      }),
+      style: new ol.style.Style({
+        stroke: new ol.style.Stroke({
+          color: '#00FF00',
+          width: 2,
+        }),
+        fill: new ol.style.Fill({
+          color: 'rgba(0, 255, 0, 0.05)',
+        }),
+      }),
+    });
+
+  try {
+    //TODO don't hardcode
+    /*const coordinates = await fetchData(
+    //"Löwengasse%2041");
+    "Radetzkyplatz%204"
+    );
+    */
+    //const coordinates= ol.proj.fromLonLat([poslng, poslat]);
+    //console.log("initosmap: coordinates: "+coordinates);
+    
+    centercoords=ol.extent.getCenter(extent);
+    console.log('initosmap: centercoords:', centercoords)
+//  [1824745.9260438273, 6141736.342751339]
+
+
+const view = new ol.View({
+    center: [0, 0],
+    zoom: 1,
+  });
+
+
+    osmap = new ol.Map({
+        target: 'domOSmap',
+        projection: 'EPSG:3857',
+        layers: [
+            new ol.layer.Tile({
+            source: new ol.source.OSM(),
+            
             }),
+            vectorLayer,
+            vectorLayer2,
+        ],
+        view: view
+        
+    });
+
+    view.setCenter(centercoords);
+    view.fit(extent, 
+         {  padding: [10, 10, 10, 10],
+            
         });
-       
+    
+
     } catch (error) {
         console.error('Error creating map:', error);
     }
+
+
     vectorLayer.getSource().on('change', 
     function(evt)
     {
@@ -80,11 +125,10 @@ async function initOSMap(extent)
       console.log ('vectorlayer::source::onchange -> feature count: '+numFeatures);
     });
 
-    vectorLayer.getSource().on('featuresloadend', 
-    function(evt)
-    {
-        console.log ('vectorlayer::source::onfeatureloadend empty func');
-    });  
+    vectorLayer.getSource().on('featuresloadend', calcsun);
+    
+
+   
 }
 
 

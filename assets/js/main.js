@@ -2,7 +2,7 @@
 
 let map; // googlemap
 var osmap; // openstreet
-var vectorLayer;
+var vectorLayer, vectorLayer2;
 let center;
 
 var poslng=16.390181530090295;

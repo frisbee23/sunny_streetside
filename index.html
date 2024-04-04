@@ -18,8 +18,9 @@ title: Blog
 <div id="domOSmap" class="map"></div>
 
 <script src="assets/js/main.js"></script>
-<script src="assets/js/osmap.js"></script>
 <script src="assets/js/sunny.js"></script>
+<script src="assets/js/osmap.js"></script>
+
 <script>
 ////////////////////////////////////////////
 
@@ -28,6 +29,8 @@ title: Blog
 // maybe checkout https://developers.google.com/maps/documentation/javascript/geolocation
 // https://developers.google.com/maps/documentation/javascript/reference/3.54/place?hl=en
 // https://developers.google.com/maps/documentation/places/web-service/place-types#food-and-drink
+
+// [x]node
 async function findPlaces() 
 {
   console.log('findPlaces');
@@ -43,10 +46,12 @@ async function findPlaces()
   var radiusInDegrees = radiusInMeters / 111300;
   var mybounds = new google.maps.LatLngBounds({lat: poslat-radiusInDegrees, lng: poslng-radiusInDegrees}, // sw
                                               {lat: poslat+radiusInDegrees, lng: poslng+radiusInDegrees}); // ne
+
+  // zb. mybounds: ((48.20676491891759, 16.385689167107365), (48.21574964488345, 16.394673893073225))                          
   console.log ('mybounds: '+mybounds);
 
   // https://developers.google.com/maps/documentation/javascript/reference/place#SearchByTextRequest
-  //https://developers.google.com/maps/documentation/javascript/place-class-data-fields
+  // https://developers.google.com/maps/documentation/javascript/place-class-data-fields
   const request = {
     textQuery: "cafe in vienna, austria",
     fields: ["displayName", "location", "businessStatus", "formattedAddress"],
@@ -79,8 +84,8 @@ async function findPlaces()
       });
 
       bounds.extend(place.location);
-      console.log(place);
-      console.log(bounds)
+      //console.log(place);
+      //console.log(bounds)
     });
     map.setCenter(bounds.getCenter());
 
@@ -89,36 +94,23 @@ async function findPlaces()
     sw=bounds.getSouthWest()
     ne=bounds.getNorthEast()
 
-    var swm = ol.proj.fromLonLat([sw.lng(), sw.lat()]);
-    var nem= ol.proj.fromLonLat([ne.lng(),ne.lat()])
+    var swm = ol.proj.fromLonLat([sw.lng(), sw.lat()], 'EPSG:3857');
+    var nem= ol.proj.fromLonLat([ne.lng(),ne.lat()], 'EPSG:3857')
     bbox=[  swm[0], swm[1],   nem[0], nem[1]   ]
     console.log('bbox (metres): ', bbox)
-    //let bbox31256 = ol.proj.transformExtent(bbox, 'EPSG:3857', 'EPSG:31256')
-
-    //console.log('bbox31256:   ', bbox31256)
-
-    /*view=osmap.getView();
-    extent=view.calculateExtent()
-    console.log('current osmap viewextent: ', extent)
-    */
-    
-    
+    // zb. bbox (metres):  (4) [1824540.057343529, 6141418.85247805, 1824970.2737795976, 6142053.833024629]
+        
     // TODO: vl bissl groesser um das naechste gebaeude auch noch mitreinzukriegen
 
-    return bbox;
+    return [bounds, bbox];
     //vectorLayer.getSource().on('featuresloadend',    onfeatures_calcsunny    );  
 
   } else {
     console.log("No results");
   }
-  console.log('findplaces end')
+ 
 }
 
-
-function onfeatures_calcsunny(evt)
-{
-  console.log ('vectorlayer::source::onfeatureloadend my func');
-}
 
 
 
@@ -153,7 +145,7 @@ async function getfeaturesofplaces()
          console.error("Error getting geolocation:", error)
       }
       //  todo later:
-      //calcsunniness(futureDate, place.location.lat(), place.location.lng());
+      calcsunniness(futureDate, place.location.lat(), place.location.lng());
       
       // todo - tahts a break, remove
       return false;
@@ -197,11 +189,39 @@ async function initMap()
 
 initMap(); //google
 
-mybbox=findPlaces();
-console.log ('global, mybbox', mybbox)
+mybbox=findPlaces()
+mybbox.then((b) => {
+  console.log ('global/promise/then, b', b[1])
 
-initOSMap(mybbox); //openstreet
-//view.fit(bbox, osmap.getSize())
+  bounds=b[0]
+
+
+const southwest = bounds.getSouthWest();
+        const northeast = bounds.getNorthEast();
+
+       const rectangle = new google.maps.Rectangle({
+          bounds: {
+            north: northeast.lat(),
+            south: southwest.lat(),
+            east: northeast.lng(),
+            west: southwest.lng(),
+          },
+          strokeColor: "#00FF00",
+          strokeOpacity: 1.0,
+          strokeWeight: 2,
+          fillColor: "#00FF00",
+          fillOpacity: 0.2,
+        });
+
+        // Set the map to display the rectangle
+        rectangle.setMap(map);
+
+  initOSMap(b[1]); //openstreet
+});
+
+
+
+
 
 </script>
 
